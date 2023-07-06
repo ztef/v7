@@ -44,7 +44,7 @@ public:
         scale(in_scale)
     {
         builder->verbose = verbose;
-        if (scale > 10.0) scale = 10.0;
+      //  if (scale > 10.0) scale = 10.0;
     }
 
 
@@ -111,7 +111,7 @@ public:
             {
                 scenegraph->addChild(true, builder->createCapsule(geom, state));
             }
-            else if (keyPress.keyBase == 's')
+            else if (keyPress.keyBase == 'x')
             {
                 scenegraph->addChild(true, builder->createSphere(geom, state));
             }
