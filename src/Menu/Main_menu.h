@@ -51,13 +51,13 @@ public:
         ImGui::Begin("viExplorer");
         ImGui::Text(keyb->lastkey.c_str()); 
         // Array of items for the listbox
-            static const char* items[] = { "Escenario XYZ", "Escenario Radial", "Escenario Elíptico", "Escenario Geográfico" };
+            static const char* items[] = { "XYZ World", "Radial World", "Radial Depth World","Spherical World", "Cylindrical world" ,"Geographic World" };
 
             // Index of the currently selected item
             static int currentItemIndex = 0;
 
             // Listbox control
-            if (ImGui::ListBox("Escenarios", &currentItemIndex, items, IM_ARRAYSIZE(items)))
+            if (ImGui::ListBox("SCENE TYPES", &currentItemIndex, items, IM_ARRAYSIZE(items)))
             {
                 // Handle selection change
                 // currentItemIndex contains the index of the selected item

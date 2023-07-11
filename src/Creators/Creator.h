@@ -34,8 +34,11 @@ class Creator {
         void createFromFile(std::string filename);
         void createPrimitive(std::string primitive);
         void createRaw(RawGeometry raw);
-        void createPlane();
-
+        void createPlane(int m, int n);
+        void createRadial(int r, int n);
+        void createRadialDepth(int r, int n);
+        void createSpherical(int r, int n);
+        void createCylindrical(int r, int n);
         PipeLineProcessor plProcessor;
 
 
