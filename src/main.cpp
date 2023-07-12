@@ -197,36 +197,53 @@ int main(int argc, char **argv)
                             vsg::GeometryInfo geomInfo;
 
 
-                            //25.686613 -100.316116
+                            //auto earth_actors = vsg::MatrixTransform::create();
+                            //earth_actors->matrix = ellipsoidModel->computeLocalToWorldTransform({25.686613, -100.316116, 0.0});
 
-                            auto ecef = ellipsoidModel->convertLatLongAltitudeToECEF({25.686613, -100.316116, 0.0});
-                            auto ecef_normal = vsg::normalize(ecef);
-                            geomInfo.position = ecef;
 
-                            geomInfo.dx.set(100.0f, 0.0f, 0.0f);
-                            geomInfo.dy.set(0.0f, 100.0f, 0.0f);
-                            geomInfo.dz.set(0.0f, 0.0f, 100000.0f);
+                            //auto ecef = ellipsoidModel->convertLatLongAltitudeToECEF({25.686613, -100.316116, 0.0});
+                            //auto ecef_normal = vsg::normalize(ecef);
+                            //geomInfo.position = ecef;
+
+                            geomInfo.dx.set(20000.0f, 0.0f, 0.0f);
+                            geomInfo.dy.set(0.0f, 20000.0f, 0.0f);
+                            geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
+
+                            geomInfo.transform = ellipsoidModel->computeLocalToWorldTransform({25.686613, -100.316116, 0.0});
 
                             auto box = builder->createCylinder(geomInfo, stateInfo);
                             box->setValue("name", "CAJA");
 
 
+                            //earth_actors->addChild(box);
+
                             earth_scene->addChild(box);
 
 
-                            geomInfo.dx.set(100.0f, 0.0f, 0.0f);
-                            geomInfo.dy.set(0.0f, 100.0f, 0.0f);
-                            geomInfo.dz.set(100.0f, 100.0f, 100000.0f);
+                          
+                            /* segundo cilindro
 
-                            auto  rot = vsg::rotate(vsg::radians(1.0f), 0.0f, 0.0f, 1.0f);
-                            auto scale = vsg::scale(vsg::vec3(1.0f, 2.0f, 3.0f));
-                            geomInfo.transform =  geomInfo.transform * rot;
+
+                            geomInfo.dx.set(200000.0f, 0.0f, 0.0f);
+                            geomInfo.dy.set(0.0f, 200000.0f, 0.0f);
+                            geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
+
+                            
+                            vsg::vec3 cylinderAxis(0.0f, 1.0f, 0.0f); 
+
+                            auto  rot = vsg::rotate(vsg::radians(45.0f), 0.0f, 1.0f, 0.0f);
+                            //auto scale = vsg::scale(vsg::vec3(1.0f, 2.0f, 3.0f));
+                            //vsg::mat4 nada;
+                            geomInfo.transform = rot;
                             
 
 
                             auto box1 = builder->createCylinder(geomInfo, stateInfo);
                             box1->setValue("name", "CAJA1");
                             earth_scene->addChild(box1);
+
+                            */
+
 
 
                             // Agrega LUZ
