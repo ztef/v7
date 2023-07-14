@@ -3,16 +3,14 @@
 #include <vsgImGui/Texture.h>
 #include <vsgImGui/imgui.h>
 #include <vsgImGui/implot.h>
-#include "Interaction/Handlers/InputHandler.h"
-#include "Interaction/Handlers/IntersectionHandler.h"
-#include "Interaction/Handlers/SceneController.h"
-#include "Interaction/Handlers/MouseHandler.h"
-#include "Interaction/Handlers/CameraTools.h"
-#include "Creators/Creator.h"
-#include "Menu/Main_menu.h"
-#include "Creators/RawTestGeom.h"
+
+
 
 #include <vsg/all.h>
+#include "viI/all.h"
+
+
+
 
 #ifdef vsgXchange_FOUND
 #include <vsgXchange/all.h>
@@ -29,7 +27,7 @@
 
     VISUAL INTERACTION SYSTEMS
 
-    viBNavigator
+    viINavigator
 
 
 ------------------------------------------------------*/
@@ -46,61 +44,32 @@ int main(int argc, char **argv)
 
     ------------------------------------------------------------------------*/
 
-    // set up defaults and read command line arguments to override them
+    // Lector de argumentos via Linea de Comando
     vsg::CommandLine arguments(&argc, argv);
 
-    // set up vsg::Options to pass in filepaths and ReaderWriter's and other IO related options to use when reading and writing files.
+    // Carga vsg::Options para usar variables de ambienete, lectura de archivos etc
     auto options = vsg::Options::create();
     options->fileCache = vsg::getEnv("VSG_FILE_CACHE");
     options->paths = vsg::getEnvPaths("VSG_FILE_PATH");
 
-    // add vsgXchange's support for reading and writing 3rd party file formats
+    // Usa vsgXchange para lectura de archivos en diferentes formatos (autocad, obj etc)
     options->add(vsgXchange::all::create());
 
     arguments.read(options);
 
+    // Ventana y Nombre de la ventana a desplegar
     auto windowTraits = vsg::WindowTraits::create();
-    windowTraits->windowTitle = "viExplorer";
-    windowTraits->debugLayer = arguments.read({"--debug", "-d"});
-    windowTraits->apiDumpLayer = arguments.read({"--api", "-a"});
+    windowTraits->windowTitle = "viINavigator v0.0.1";
+
+
 
     auto window = vsg::Window::create(windowTraits);
-
-    if (arguments.read("--IMMEDIATE"))
-        windowTraits->swapchainPreferences.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-    if (arguments.read({"--fullscreen", "--fs"}))
-        windowTraits->fullscreen = true;
-    if (arguments.read({"--window", "-w"}, windowTraits->width, windowTraits->height))
-    {
-        windowTraits->fullscreen = false;
-    }
-
-    arguments.read("--screen", windowTraits->screenNum);
-    arguments.read("--display", windowTraits->display);
-    arguments.read("--samples", windowTraits->samples);
-
-    auto outputFilename = arguments.value(std::string(), "-o");
-    auto numFrames = arguments.value(-1, "-f");
-    auto pathFilename = arguments.value(std::string(), "-p");
-    auto maxPagedLOD = arguments.value(0, "--maxPagedLOD");
-    auto loadLevels = arguments.value(0, "--load-levels");
-    auto horizonMountainHeight = arguments.value(0.0, "--hmh");
-    bool useEllipsoidPerspective = !arguments.read({"--disble-EllipsoidPerspective", "--dep"});
-
-    if (arguments.read("--rgb"))
-        options->mapRGBtoRGBAHint = false;
-    arguments.read("--file-cache", options->fileCache);
-    bool osgEarthStyleMouseButtons = arguments.read({"--osgearth", "-e"});
-
-    //VkClearColorValue clearColor{{0.2f, 0.2f, 0.4f, 1.0f}};
-
-   // VkClearColorValue clearColor{{0.0f, 0.0f, 0.0f, 1.0f}};
-
-    //arguments.read({"--bc", "--background-color"}, clearColor.float32[0], clearColor.float32[1], clearColor.float32[2], clearColor.float32[3]);
-
+    
+    auto numFrames = -1;
+    bool osgEarthStyleMouseButtons = true;
+    
     uint32_t numOperationThreads = 0;
-    if (arguments.read("--ot", numOperationThreads))
-        options->operationThreads = vsg::OperationThreads::create(numOperationThreads);
+   
 
     // Usa setLineWidth para poder manejar el ancho desde un slider del GUI
     auto setLineWidth = vsg::SetLineWidth::create(1.0f);
@@ -162,6 +131,8 @@ int main(int argc, char **argv)
 
                             ---------------------------------------------------*/
 
+                            /*
+
                             vsg::ref_ptr<vsg::TileDatabaseSettings> settings;
                             // setup OpenStreetMap settings
                             settings = vsg::TileDatabaseSettings::create();
@@ -174,8 +145,8 @@ int main(int argc, char **argv)
                             settings->projection = "EPSG:3857"; // Spherical Mecator
                             settings->imageLayer = "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-                            arguments.read("-t", settings->lodTransitionScreenHeightRatio);
-                            arguments.read("-m", settings->maxLevel);
+                           //arguments.read("-t", settings->lodTransitionScreenHeightRatio);
+                           // arguments.read("-m", settings->maxLevel);
 
                             auto ellipsoidModel = settings->ellipsoidModel;
 
@@ -185,7 +156,7 @@ int main(int argc, char **argv)
 
 
 
-                            /*---------ESCENA CARTOGRAFICA -----------*/
+                            
                             
                             // Se crea un Grupo conteniendo la BD geografica y otro nodo para contener
                             // a los actores colocados sobre la cartografia (por ahora solo un BOX)
@@ -193,6 +164,19 @@ int main(int argc, char **argv)
 
                             auto earth_scene = vsg::Group::create();
                             earth_scene->addChild(earth);
+
+
+                            */
+
+                            //vsg::ref_ptr<vsg::TileDatabaseSettings> settings;           
+                            auto settings = vsg::TileDatabaseSettings::create();
+
+                            auto earth_scene = EarthSceneCreator::create(options,settings);
+                            
+
+                            auto ellipsoidModel = settings->ellipsoidModel;
+
+
 
                             vsg::GeometryInfo geomInfo;
 
@@ -208,6 +192,9 @@ int main(int argc, char **argv)
                             geomInfo.dx.set(20000.0f, 0.0f, 0.0f);
                             geomInfo.dy.set(0.0f, 20000.0f, 0.0f);
                             geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
+
+
+                            
 
                             geomInfo.transform = ellipsoidModel->computeLocalToWorldTransform({25.686613, -100.316116, 0.0});
 
@@ -418,7 +405,7 @@ int main(int argc, char **argv)
 
     auto params = Params::create();
     // auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options));
-    auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(setLineWidth, &keyb, &scenecontroller));
+    auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options, setLineWidth, &keyb, &scenecontroller));
 
   
   
