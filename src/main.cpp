@@ -131,141 +131,32 @@ int main(int argc, char **argv)
 
                             ---------------------------------------------------*/
 
-                            /*
+                           
 
-                            vsg::ref_ptr<vsg::TileDatabaseSettings> settings;
-                            // setup OpenStreetMap settings
-                            settings = vsg::TileDatabaseSettings::create();
-                            settings->extents = {{-180.0, -90.0, 0.0}, {180.0, 90.0, 1.0}};
-                            settings->noX = 1;
-                            settings->noY = 1;
-                            settings->maxLevel = 17;
-                            settings->originTopLeft = true;
-                            settings->lighting = false;
-                            settings->projection = "EPSG:3857"; // Spherical Mecator
-                            settings->imageLayer = "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-                           //arguments.read("-t", settings->lodTransitionScreenHeightRatio);
-                           // arguments.read("-m", settings->maxLevel);
-
-                            auto ellipsoidModel = settings->ellipsoidModel;
-
-                            auto earth = vsg::TileDatabase::create();
-                            earth->settings = settings;
-                            earth->readDatabase(options);
-
-
-
-                            
-                            
-                            // Se crea un Grupo conteniendo la BD geografica y otro nodo para contener
-                            // a los actores colocados sobre la cartografia (por ahora solo un BOX)
-
-
-                            auto earth_scene = vsg::Group::create();
-                            earth_scene->addChild(earth);
-
-
-                            */
-
-                            //vsg::ref_ptr<vsg::TileDatabaseSettings> settings;           
+                            // ESCENA : earth_scene    
                             auto settings = vsg::TileDatabaseSettings::create();
-
                             auto earth_scene = EarthSceneCreator::create(options,settings);
-                            
+
 
                             auto ellipsoidModel = settings->ellipsoidModel;
 
 
 
-                            vsg::GeometryInfo geomInfo;
+
+                            auto barra = GeomActorCreator::create(ellipsoidModel,builder, stateInfo, 25.686613, -100.316116);
+                            earth_scene->addChild(barra);
 
 
-                            //auto earth_actors = vsg::MatrixTransform::create();
-                            //earth_actors->matrix = ellipsoidModel->computeLocalToWorldTransform({25.686613, -100.316116, 0.0});
-
-
-                            //auto ecef = ellipsoidModel->convertLatLongAltitudeToECEF({25.686613, -100.316116, 0.0});
-                            //auto ecef_normal = vsg::normalize(ecef);
-                            //geomInfo.position = ecef;
-
-                            geomInfo.dx.set(20000.0f, 0.0f, 0.0f);
-                            geomInfo.dy.set(0.0f, 20000.0f, 0.0f);
-                            geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
-
-
-                            
-
-                            geomInfo.transform = ellipsoidModel->computeLocalToWorldTransform({25.686613, -100.316116, 0.0});
-
-                            auto box = builder->createCylinder(geomInfo, stateInfo);
-                            box->setValue("name", "CAJA");
-
-
-                            //earth_actors->addChild(box);
-
-                            earth_scene->addChild(box);
-
-
-                          
-                            /* segundo cilindro
-
-
-                            geomInfo.dx.set(200000.0f, 0.0f, 0.0f);
-                            geomInfo.dy.set(0.0f, 200000.0f, 0.0f);
-                            geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
-
-                            
-                            vsg::vec3 cylinderAxis(0.0f, 1.0f, 0.0f); 
-
-                            auto  rot = vsg::rotate(vsg::radians(45.0f), 0.0f, 1.0f, 0.0f);
-                            //auto scale = vsg::scale(vsg::vec3(1.0f, 2.0f, 3.0f));
-                            //vsg::mat4 nada;
-                            geomInfo.transform = rot;
-                            
-
-
-                            auto box1 = builder->createCylinder(geomInfo, stateInfo);
-                            box1->setValue("name", "CAJA1");
-                            earth_scene->addChild(box1);
-
-                            */
+                            auto barra1 = GeomActorCreator::create(ellipsoidModel,builder, stateInfo, 26.686613, -100.316116);
+                            earth_scene->addChild(barra1);
 
 
 
-                            // Agrega LUZ
-
-                            auto directionalLight1 = vsg::DirectionalLight::create();
-                            directionalLight1->name = "directional";
-                            directionalLight1->color.set(1.0, 1.0, 1.0);
-                            directionalLight1->intensity = 0.99;
-                            directionalLight1->direction.set(0.0, -1.0, -1.0);
-                            earth_scene->addChild( directionalLight1);
+                            auto luz = LightCreator::create();
+                            earth_scene->addChild(luz);
 
 
-
-                            /*
-                            const double invalid_value = std::numeric_limits<double>::max();
-                            double poi_latitude = invalid_value;
-                            double poi_longitude = invalid_value;
-                            double poi_distance = invalid_value;
-
-                            while (arguments.read("--poi", poi_latitude, poi_longitude))
-                            {
-                            };
-                            while (arguments.read("--distance", poi_distance))
-                            {
-                            };
-
-                            if (arguments.errors())
-                                return arguments.writeErrorMessages(std::cerr);
-
-                            if (!outputFilename.empty())
-                            {
-                                vsg::write(earth_scene, outputFilename);
-                                return 0;
-                            }
-                            */
+                           
 
 
                             /*-------------------------------------------------
@@ -275,9 +166,9 @@ int main(int argc, char **argv)
 
                             ---------------------------------------------------*/
 
-                            //  Escena o Nodo SWITCH. Contiene sub escenas/nodos switcheables
+                            
 
-                            /*----------vsg SCENE --------------------*/
+                            /*----------ESCENA ABSTRACTA  --------------------*/
                             auto abstract_scene = vsg::Switch::create();
 
                            
@@ -287,14 +178,9 @@ int main(int argc, char **argv)
                             creator.setOptions(options);
 
 
-                                        auto directionalLight = vsg::DirectionalLight::create();
-                                        directionalLight->name = "directional";
-                                        directionalLight->color.set(1.0, 1.0, 1.0);
-                                        directionalLight->intensity = 0.99;
-                                        directionalLight->direction.set(0.0, -1.0, -1.0);
-                                        abstract_scene->addChild(true, directionalLight);
-
-
+                                       
+                                        auto luz1 = LightCreator::create();
+                                        abstract_scene->addChild(true, luz1);
 
                                         auto abstract_nodes = vsg::Switch::create();
 
@@ -303,37 +189,49 @@ int main(int argc, char **argv)
                                         /*--------------- XYZ SCENE -----------------*/
 
                                         auto xyz_scene = vsg::Switch::create();
-                                        creator.setScene(xyz_scene);
-                                        creator.createPlane(20,20); // Crea un plano
-                                        //creator.createPrimitive("box");
+                                            creator.setScene(xyz_scene);
+                                            creator.createPlane(20,20); // Crea un plano 
 
-                                        /*  Agregada a escena XYZ */
+                                             auto layout = vsg::StandardLayout::create();
+                                            layout->glyphLayout = vsg::StandardLayout::LEFT_TO_RIGHT_LAYOUT;
+                                            layout->position = vsg::vec3(-1.0, 0.0, 2.0);
+                                            layout->horizontal = vsg::vec3(0.9, 0.0, 0.0);
+                                            layout->vertical = vsg::vec3(0.0, 0.0, 0.9);
+                                            layout->color = vsg::vec4(0.0, 1.0, 0.0, 1.0);
+
+                                            auto font_filename = std::string("./fonts/times.vsgb");
+                                            auto font = vsg::read_cast<vsg::Font>(font_filename, options);
+
+
+                                            auto text = vsg::Text::create();
+                                            text->text = vsg::stringValue::create("LEFT_TO_RIGHT_LAYOUT");
+                                            text->font = font;
+                                            text->layout = layout;
+                                            
+                                            
+                                            text->setup(0, options);
+                                            xyz_scene->addChild(true, text);
+
+
+
                                         abstract_nodes->addChild(true, xyz_scene);
 
 
-                                         
-
-
-
+   
                                           /*--------------- radial SCENE -----------------*/
 
                                         auto radial_scene = vsg::Switch::create();
-                                        creator.setScene(radial_scene);
-                                        creator.createRadial(20,20); // Crea un radial
-                                        
-
-                                        /*  Agregada a escena XYZ */
+                                            creator.setScene(radial_scene);
+                                            creator.createRadial(20,20); // Crea un radial                                 
                                         abstract_nodes->addChild(false, radial_scene);
 
 
                                          /*--------------- radial Depth SCENE -----------------*/
 
                                         auto radiald_scene = vsg::Switch::create();
-                                        creator.setScene(radiald_scene);
-                                        creator.createRadialDepth(20,20); // Crea un radial
-                                        
-
-                                        /*  Agregada a escena XYZ */
+                                            creator.setScene(radiald_scene);
+                                            creator.createRadialDepth(20,20); // Crea un radial
+                                    
                                         abstract_nodes->addChild(false, radiald_scene);
 
 
@@ -341,23 +239,29 @@ int main(int argc, char **argv)
                                         /*--------------- spherical SCENE -----------------*/
 
                                         auto spherical_scene = vsg::Switch::create();
-                                        creator.setScene(spherical_scene);
-                                        creator.createSpherical(1,1); // Crea un Sphere
-                                        
-
-                                        /*  Agregada a escena XYZ */
+                                           creator.setScene(spherical_scene);
+                                            creator.createSpherical(1,1); // Crea un Sphere
+                                     
                                         abstract_nodes->addChild(false, spherical_scene);
 
 
                                          /*--------------- cylindrical SCENE -----------------*/
 
                                         auto cylindrical_scene = vsg::Switch::create();
-                                        creator.setScene(cylindrical_scene);
-                                        creator.createCylindrical(1,1); // Crea un Sphere
+                                            creator.setScene(cylindrical_scene);
+                                            creator.createCylindrical(1,1); // Crea un Sphere
+
+
+                                           
+                                        
+                                        abstract_nodes->addChild(false, cylindrical_scene);
+
+
+
+
                                         
 
-                                        /*  Agregada a escena XYZ */
-                                        abstract_nodes->addChild(false, cylindrical_scene);
+
 
 
                             /* AGREGA TODOS A ABSTRACT_SCENE */
@@ -365,27 +269,7 @@ int main(int argc, char **argv)
                             abstract_scene->addChild(true, abstract_nodes);
 
 
-                            // NODO TESTING :
-
-                                /*
-                                stateInfo.wireframe = false;
-                                stateInfo.instance_colors_vec4 = true;
-                                stateInfo.lighting = true;
-                                builder->shaderSet = vsg::createPhongShaderSet(options);
-
-                                auto colors = vsg::vec4Array::create(1);
-                                            geomInfo.colors = colors;
-                                            for (auto& c : *(colors))
-                                            {
-                                                c.set(float(std::rand()) / float(RAND_MAX), float(std::rand()) / float(RAND_MAX), float(std::rand()) / float(RAND_MAX), 1.0f);
-                                            }
-
-
-
-
-                                    abstract_scene->addChild(true, builder->createCapsule(geomInfo, stateInfo));            
-                                    */
-
+                           
 
 
 
@@ -407,7 +291,6 @@ int main(int argc, char **argv)
     // auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options));
     auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options, setLineWidth, &keyb, &scenecontroller));
 
-  
   
   
     /*------------------------------------------------------------------------
@@ -532,9 +415,6 @@ int main(int argc, char **argv)
           
             // Trackball para escenas abstractas
             auto tb1 = vsg::Trackball::create(camera_abstract);
-
-
-
 
 
             // Crea un MOUSEHANDLER para manejar los 2 trackballs. Uno para la escena geografica y otro para la abstracta.

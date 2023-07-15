@@ -7,5 +7,7 @@
 #include "Interaction/Handlers/CameraTools.h"
 #include "Creators/Creator.h"
 #include "Creators/EarthSceneCreator.h"
+#include "Creators/GeomActorCreator.h"
+#include "Creators/LightCreator.h"
 #include "Menu/Main_menu.h"
 #include "Creators/RawTestGeom.h"

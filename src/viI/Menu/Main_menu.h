@@ -7,6 +7,9 @@
 #include <vsgImGui/Texture.h>
 #include <vsgImGui/imgui.h>
 #include <vsgImGui/implot.h>
+
+#include "../Interaction/VIConsole.h"
+
 #include "../Interaction/Handlers/InputKeyboardValues.h"
 #include "../Interaction/Handlers/SceneController.h"
 
@@ -20,12 +23,12 @@ struct Params : public vsg::Inherit<vsg::Object, Params>
     bool showImPlotDemoWindow = false;
     bool showLogoWindow = true;
     bool showAboutWindow = false;
+    bool showConsoleWindow = false;
     bool showImagesWindow = false;
     float clearColor[3]{0.2f, 0.2f, 0.4f}; // Unfortunately, this doesn't change dynamically in vsg
     uint32_t counter = 0;
     float dist = 0.f;
 };
-
 
 
 
@@ -38,6 +41,7 @@ public:
     vsg::ref_ptr<Params> params;
     InputKeyboardValues * keyb; 
     SceneController * scenecontroller;
+    //static ExampleAppConsole console;
 
     
 
@@ -53,10 +57,10 @@ public:
 
 
        
-       auto texData = vsg::read_cast<vsg::Data>("./textures/logo.jpeg", options);
+       auto texData = vsg::read_cast<vsg::Data>("./textures/vilogow.png", options);
        logo = vsgImGui::Texture::create_if(texData, texData);
 
-       auto texData1 = vsg::read_cast<vsg::Data>("./textures/logo.jpeg", options);
+       auto texData1 = vsg::read_cast<vsg::Data>("./textures/ojo.jpg", options);
        about = vsgImGui::Texture::create_if(texData1, texData1); 
       
     }
@@ -94,6 +98,7 @@ public:
             }
         
         ImGui::SliderFloat("Line Width", &(setLineWidth->lineWidth), 1, 5);
+        ImGui::Checkbox("Console", &params->showConsoleWindow);
         ImGui::Checkbox("About", &params->showAboutWindow);
         ImGui::End();
 
@@ -125,14 +130,29 @@ public:
 
         if(params->showAboutWindow){
 
-              ImGui::SetNextWindowSize(ImVec2(800, 600)); 
+              ImGui::SetNextWindowSize(ImVec2(500, 550)); 
               ImGui::Begin("About", &params->showAboutWindow);
              
              
                     ImGui::Image(about->id(cb.deviceID), ImVec2(about->width / 2.0f, about->height / 2.0f));
+                    ImGui::Text("Visual Interactor v0.0.1");
+                    const float size = 90.0f;
+                    ImGui::Image(logo->id(cb.deviceID), ImVec2(size, size), ImVec2(0.0f, 0.0f));
+                    ImGui::Text("Visual Interaction Systems Corp. ");
 
                 
               ImGui::End();
+        }
+         if(params->showConsoleWindow){
+
+              
+             
+             
+               static VIConsole console;
+               console.Draw("viSQL Console",&params->showConsoleWindow);
+
+                
+             
         }
 
 
