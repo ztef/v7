@@ -12,13 +12,22 @@
 
 #include "../Interaction/Handlers/InputKeyboardValues.h"
 #include "../Interaction/Handlers/SceneController.h"
+#include "../Command/CommandProcessor.h"
 
 #include <vsg/all.h>
 
 
 
-// Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
-// For the console example, we are using a more C++ like approach of declaring a class to hold both data and functions.
+/*
+
+    ViConsole : Consola para la ejecucion de comandos en viQL
+    Permite la captacion de comandos y los envia a un CommandProcessor.
+
+
+*/
+
+
+
 struct VIConsole
 {
     char                  InputBuf[256];
@@ -29,10 +38,11 @@ struct VIConsole
     ImGuiTextFilter       Filter;
     bool                  AutoScroll;
     bool                  ScrollToBottom;
+    CommandProcessor *    commandProcessor;
 
-    VIConsole()
+    VIConsole(CommandProcessor * in_cp)
     {
-        //IMGUI_DEMO_MARKER("Examples/Console");
+        //Inicializa
         ClearLog();
         memset(InputBuf, 0, sizeof(InputBuf));
         HistoryPos = -1;
@@ -45,6 +55,7 @@ struct VIConsole
         AutoScroll = true;
         ScrollToBottom = false;
         AddLog("VI Console init");
+        commandProcessor = in_cp;
     }
     ~VIConsole()
     {
@@ -102,15 +113,36 @@ struct VIConsole
             "");
         ImGui::TextWrapped("Digite 'HELP' para obtener ayuda.");
 
-        // TODO: display items starting from the bottom
 
-        if (ImGui::SmallButton("Display viSQL Commands"))  { AddLog("%d some text", Items.Size); AddLog("some more text"); AddLog("display very important message here!"); }
+        // Despliega comandos disponibles de viSQL :
+
+        if (ImGui::SmallButton("Display viSQL Commands"))  { 
+            AddLog("SET SCENE {XYZ,RADIAL,RADIALDEPTH, SPHERICAL, CYLINDRICAL, GEO}"); 
+            AddLog("LOAD SCENE {}");
+            AddLog("LOAD ACTORS FROM {}"); 
+            AddLog("SORT ON {COLOR}"); 
+        }
+
+
+
         ImGui::SameLine();
-        if (ImGui::SmallButton("Add Debug Error")) { AddLog("[error] something went wrong"); }
+        if (ImGui::SmallButton("Add Debug Error")) 
+        { 
+            AddLog("[error] something went wrong"); 
+        }
+
         ImGui::SameLine();
-        if (ImGui::SmallButton("Clear"))           { ClearLog(); }
+        
+        if (ImGui::SmallButton("Clear")){ 
+            ClearLog(); 
+        }
+        
+        
+        
         ImGui::SameLine();
+        
         bool copy_to_clipboard = ImGui::SmallButton("Copy");
+        
         //static float t = 0.0f; if (ImGui::GetTime() - t > 0.02f) { t = ImGui::GetTime(); AddLog("Spam %f", t); }
 
         ImGui::Separator();
@@ -125,8 +157,11 @@ struct VIConsole
         // Options, Filter
         if (ImGui::Button("Options"))
             ImGui::OpenPopup("Options");
+        
         ImGui::SameLine();
+        
         Filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
+        
         ImGui::Separator();
 
         // Reserve enough left-over height for 1 separator + 1 input text
@@ -235,7 +270,7 @@ struct VIConsole
             }
         History.push_back(Strdup(command_line));
 
-        // Process command
+        // Procesa comando :
         if (Stricmp(command_line, "CLEAR") == 0)
         {
             ClearLog();
@@ -254,7 +289,10 @@ struct VIConsole
         }
         else
         {
-            AddLog("Unknown command: '%s'\n", command_line);
+            //AddLog("Unknown command: '%s'\n", command_line);
+        
+            std::string result = commandProcessor->parse(command_line);
+            AddLog("%s\n", &result[0]);
         }
 
         // On command input, we scroll to bottom even if AutoScroll==false

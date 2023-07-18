@@ -1,4 +1,5 @@
 #include "Creator.h"
+#include "TextCreator.h"
 
 
 
@@ -6,11 +7,7 @@ Creator::Creator(){
 
         builder = vsg::Builder::create();
       
-
-
-       
-
-      
+    
 
 };
 
@@ -30,8 +27,21 @@ void Creator::setScene(vsg::ref_ptr<vsg::Switch> in_scene){
     scene = in_scene;
 };
 
-void Creator::setOptions(vsg::ref_ptr<vsg::Options> in_options){
+
+void Creator::resetPositions(){
+     // POSICION EN EL MUNDO
+
+        geomInfo.dx.set(1000000.0f, 0.0f, 0.0f);
+        geomInfo.dy.set(0.0f, 1000000.0f, 0.0f);
+        geomInfo.dz.set(0.0f, 0.0f, 1000000.0f);
+
+    
+};
+
+void Creator::setOptions(vsg::ref_ptr<vsg::Options> in_options, vsg::ref_ptr<vsg::Font> in_font){
     local_options = in_options;
+    font = in_font;
+
     builder->shaderSet = vsg::createPhongShaderSet(local_options);
 };
 
@@ -73,16 +83,10 @@ void Creator::createPrimitive(std::string primitive){
     stateInfo.lighting = true;
  
  
-    //auto colors = vsg::vec4Array::create(2);
-    //geomInfo.color= {0.0f,0.0f,0.0f,1.0f};
-
     
     auto colors = vsg::vec4Array::create(1);
-    
-    for (auto& c : *(colors))
-    {
-        c.set(float(std::rand()) / float(RAND_MAX), float(std::rand()) / float(RAND_MAX), float(std::rand()) / float(RAND_MAX), 1.0f);
-    }
+
+    colors->at(0).set(1.0f, 0.0f, 0.0f,1.0f);
     
 
     geomInfo.colors = colors;    
@@ -92,7 +96,7 @@ void Creator::createPrimitive(std::string primitive){
     geomInfo.position.z = 0;
 
     for(int i=0; i<n; i++){
-         geomInfo.position += geomInfo.dx * 1.1f;
+        geomInfo.position += geomInfo.dx * 1.1f;
         for(int j=0; j < m; j++){
                 geomInfo.position += geomInfo.dy * 1.1f;
                 scene->addChild(true, builder->createQuad(geomInfo, stateInfo));
@@ -101,9 +105,34 @@ void Creator::createPrimitive(std::string primitive){
     }
 
 
+    // Labels en X
+
+    resetPositions();
+    geomInfo.position.x =geomInfo.position.x - (geomInfo.dx.x * 1.1f * n);
+    //geomInfo.position.y = geomInfo.position.y - (geomInfo.dy.y * 1.1f * m);
+    geomInfo.position.z = 0;
+
+    for(int i=0; i<n; i++){
+        geomInfo.position += geomInfo.dx * 1.1f;
+        auto text = TextCreator::create(std::to_string(i), geomInfo.position.x, geomInfo.position.y, 100000, 500000, font, local_options);
+        scene->addChild(true,text);
+    }
+
+    // Labels en Y
+    resetPositions();
+      geomInfo.position.x =geomInfo.position.x + (geomInfo.dx.x * 1.1f );
+   // geomInfo.position.y = geomInfo.position.y - (geomInfo.dy.y * 1.1f * m);
+    geomInfo.position.z = 0;
+
+    for(int j=0; j<n; j++){
+        geomInfo.position += geomInfo.dy * 1.1f;
+        auto text = TextCreator::create(std::to_string(j), geomInfo.position.x, geomInfo.position.y, 100000, 500000, font, local_options);
+        scene->addChild(true,text);
+    }
+
+   
+
  }
-
-
 
 
 

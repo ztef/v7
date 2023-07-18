@@ -12,6 +12,7 @@
 
 #include "../Interaction/Handlers/InputKeyboardValues.h"
 #include "../Interaction/Handlers/SceneController.h"
+#include "../Command/CommandProcessor.h"
 
 #include <vsg/all.h>
 
@@ -41,6 +42,7 @@ public:
     vsg::ref_ptr<Params> params;
     InputKeyboardValues * keyb; 
     SceneController * scenecontroller;
+    CommandProcessor * commandProcessor;
     //static ExampleAppConsole console;
 
     
@@ -48,19 +50,21 @@ public:
 
     void load();
 
-    Main_menu(vsg::ref_ptr<Params> in_params, vsg::ref_ptr<vsg::Options> options, vsg::ref_ptr<vsg::SetLineWidth> in_setLineWidth,  InputKeyboardValues * in_keyb, SceneController * in_sc) :
+    Main_menu(vsg::ref_ptr<Params> in_params, vsg::ref_ptr<vsg::Options> options, vsg::ref_ptr<vsg::SetLineWidth> in_setLineWidth,  InputKeyboardValues * in_keyb, SceneController * in_sc, CommandProcessor * in_cp) :
         params(in_params),
         setLineWidth(in_setLineWidth),
         keyb(in_keyb),
-        scenecontroller(in_sc)
+        scenecontroller(in_sc),
+        commandProcessor(in_cp)
     {
 
 
        
-       auto texData = vsg::read_cast<vsg::Data>("./textures/vilogow.png", options);
+        auto texData = vsg::read_cast<vsg::Data>("./textures/vilogow.png", options);
+       
        logo = vsgImGui::Texture::create_if(texData, texData);
 
-       auto texData1 = vsg::read_cast<vsg::Data>("./textures/ojo.jpg", options);
+       auto texData1 = vsg::read_cast<vsg::Data>("./textures/ojo.jpeg", options);
        about = vsgImGui::Texture::create_if(texData1, texData1); 
       
     }
@@ -148,7 +152,7 @@ public:
               
              
              
-               static VIConsole console;
+               static VIConsole console(commandProcessor);
                console.Draw("viSQL Console",&params->showConsoleWindow);
 
                 

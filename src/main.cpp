@@ -4,13 +4,8 @@
 #include <vsgImGui/imgui.h>
 #include <vsgImGui/implot.h>
 
-
-
 #include <vsg/all.h>
 #include "viI/all.h"
-
-
-
 
 #ifdef vsgXchange_FOUND
 #include <vsgXchange/all.h>
@@ -23,6 +18,64 @@
 #include <iostream>
 #include <thread>
 
+
+
+class FindVertexData : public vsg::Visitor
+{
+public:
+
+    void apply(vsg::Object& object)
+    {
+        object.traverse(*this);
+    }
+
+    void apply(vsg::Geometry& geometry)
+    {
+        if (geometry.arrays.empty()) return;
+        geometry.arrays[0]->data->accept(*this);
+    }
+
+    void apply(vsg::VertexIndexDraw& vid)
+    {
+        if (vid.arrays.empty()) return;
+        vid.arrays[0]->data->accept(*this);
+    }
+
+    void apply(vsg::BindVertexBuffers& bvd)
+    {
+        if (bvd.arrays.empty()) return;
+        bvd.arrays[0]->data->accept(*this);
+    }
+
+    void apply(vsg::vec3Array& vertices)
+    {
+        if (verticesSet.count(&vertices) == 0)
+        {
+            verticesSet.insert(&vertices);
+        }
+    }
+
+
+    std::vector<vsg::ref_ptr<vsg::vec3Array>> getVerticesList()
+    {
+        std::vector<vsg::ref_ptr<vsg::vec3Array>> verticesList(verticesSet.size());
+        auto vertices_itr = verticesList.begin();
+        for(auto& vertices : verticesSet)
+        {
+            (*vertices_itr++) = const_cast<vsg::vec3Array*>(vertices);
+        }
+
+        return verticesList;
+    }
+
+    std::set<vsg::vec3Array*> verticesSet;
+};
+
+
+
+
+
+
 /*-----------------------------------------------------
 
     VISUAL INTERACTION SYSTEMS
@@ -31,8 +84,6 @@
 
 
 ------------------------------------------------------*/
-
-
 
 int main(int argc, char **argv)
 {
@@ -61,34 +112,41 @@ int main(int argc, char **argv)
     auto windowTraits = vsg::WindowTraits::create();
     windowTraits->windowTitle = "viINavigator v0.0.1";
 
-
-
     auto window = vsg::Window::create(windowTraits);
-    
+
     auto numFrames = -1;
     bool osgEarthStyleMouseButtons = true;
-    
+
     uint32_t numOperationThreads = 0;
-   
+
+
+
+    // Tipo de letra
+     auto font_filename = std::string("./fonts/times.vsgb");
+     auto font = vsg::read_cast<vsg::Font>(font_filename, options);
+
 
     // Usa setLineWidth para poder manejar el ancho desde un slider del GUI
     auto setLineWidth = vsg::SetLineWidth::create(1.0f);
-
-
-
-
 
     /*---------------------------------
 
         0 : CONTROLADOR DE LA ESCENA
 
         Realiza Switcheo entre escenas registradas
-    
+
     -----------------------------------*/
 
     SceneController scenecontroller;
 
 
+ /*---------------------------------
+
+        1 : PROCESADOR DE COMANDOS
+
+    -----------------------------------*/
+
+    CommandProcessor commandProcessor;
 
 
     /*-------------------------------------------------
@@ -99,17 +157,15 @@ int main(int argc, char **argv)
 
         --------------------------------------------------*/
 
-        // 1.1  : Builder generico para construir geometrias primitivas en demanda :
+    // 1.1  : Builder generico para construir geometrias primitivas en demanda :
 
-            auto builder = vsg::Builder::create();
-            vsg::StateInfo stateInfo;
+    auto builder = vsg::Builder::create();
+    vsg::StateInfo stateInfo;
 
-            
-            stateInfo.lighting = true;
-        // 1.2 : CREA OBJETO CREATOR para crear objetos complejos  e insertarlos a la escena.
+    stateInfo.lighting = true;
+    // 1.2 : CREA OBJETO CREATOR para crear objetos complejos  e insertarlos a la escena.
 
-            Creator creator;
-
+    Creator creator;
 
     /*----------------------------------------------------
 
@@ -122,156 +178,114 @@ int main(int argc, char **argv)
 
     ------------------------------------------------------*/
 
+    /*-------------------------------------------------
 
 
-                            /*-------------------------------------------------
+        NODO CARTOGRAFICO
 
+    ---------------------------------------------------*/
 
-                                NODO CARTOGRAFICO
+    // ESCENA : earth_scene
+    auto settings = vsg::TileDatabaseSettings::create();
+    auto earth_scene = EarthSceneCreator::create(options, settings);
 
-                            ---------------------------------------------------*/
+    auto ellipsoidModel = settings->ellipsoidModel;
 
-                           
+    auto barra = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 25.686613, -100.316116);
+    earth_scene->addChild(barra);
 
-                            // ESCENA : earth_scene    
-                            auto settings = vsg::TileDatabaseSettings::create();
-                            auto earth_scene = EarthSceneCreator::create(options,settings);
+    auto barra1 = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 26.686613, -100.316116);
+    earth_scene->addChild(barra1);
 
+    auto luz = LightCreator::create();
+    earth_scene->addChild(luz);
 
-                            auto ellipsoidModel = settings->ellipsoidModel;
+    /*-------------------------------------------------
 
 
+        NODO ABSTRACTO
 
+    ---------------------------------------------------*/
 
-                            auto barra = GeomActorCreator::create(ellipsoidModel,builder, stateInfo, 25.686613, -100.316116);
-                            earth_scene->addChild(barra);
+                /*----------ESCENA ABSTRACTA  --------------------*/
+                auto abstract_scene = vsg::Switch::create();
 
+                // REGISTRA LA ESCENA EN EL CREATOR
+                creator.setScene(abstract_scene);
+                creator.setOptions(options, font);
 
-                            auto barra1 = GeomActorCreator::create(ellipsoidModel,builder, stateInfo, 26.686613, -100.316116);
-                            earth_scene->addChild(barra1);
+                auto luz1 = LightCreator::create();
+                abstract_scene->addChild(true, luz1);
 
+                auto abstract_nodes = vsg::Switch::create();
 
+    /*--------------- XYZ SCENE -----------------*/
 
-                            auto luz = LightCreator::create();
-                            earth_scene->addChild(luz);
+                        auto xyz_scene = vsg::Switch::create();
+                        creator.setScene(xyz_scene);
+                        creator.createPlane(30, 30); // Crea un plano
 
+                        auto a =  ActorCreator::create(builder,stateInfo, 0,0);
+                        
+                        
+                         // visit the scene graph to collect all the vertex arrays;
+                        size_t numVertices = 0;
+                        auto verticesList = vsg::visit<FindVertexData>(a).getVerticesList();
+                       
+                            for(auto& vertices : verticesList)
+                            {
+                                vertices->properties.dataVariance = vsg::DYNAMIC_DATA;
+                                numVertices += vertices->size();
+                            }
+                         
+                        
+                        
+                        
+                        xyz_scene->addChild(true,a);
 
-                           
 
 
-                            /*-------------------------------------------------
 
 
-                                NODO ABSTRACTO
+                 
 
-                            ---------------------------------------------------*/
+                        abstract_nodes->addChild(true, xyz_scene);
 
-                            
+    /*--------------- radial SCENE -----------------*/
 
-                            /*----------ESCENA ABSTRACTA  --------------------*/
-                            auto abstract_scene = vsg::Switch::create();
+                        auto radial_scene = vsg::Switch::create();
+                        creator.setScene(radial_scene);
+                        // creator.createRadial(20,20); // Crea un radial
 
-                           
+                        abstract_nodes->addChild(false, radial_scene);
 
-                            // REGISTRA LA ESCENA EN EL CREATOR
-                            creator.setScene(abstract_scene);
-                            creator.setOptions(options);
+    /*--------------- radial Depth SCENE -----------------*/
 
+                        auto radiald_scene = vsg::Switch::create();
+                        creator.setScene(radiald_scene);
+                        creator.createRadialDepth(20, 20); // Crea un radial
 
-                                       
-                                        auto luz1 = LightCreator::create();
-                                        abstract_scene->addChild(true, luz1);
+                        abstract_nodes->addChild(false, radiald_scene);
 
-                                        auto abstract_nodes = vsg::Switch::create();
+    /*--------------- spherical SCENE -----------------*/
 
+                        auto spherical_scene = vsg::Switch::create();
+                        creator.setScene(spherical_scene);
+                        creator.createSpherical(1, 1); // Crea un Sphere
 
+                        abstract_nodes->addChild(false, spherical_scene);
 
-                                        /*--------------- XYZ SCENE -----------------*/
+    /*--------------- cylindrical SCENE -----------------*/
 
-                                        auto xyz_scene = vsg::Switch::create();
-                                            creator.setScene(xyz_scene);
-                                            creator.createPlane(20,20); // Crea un plano 
+                        auto cylindrical_scene = vsg::Switch::create();
+                        creator.setScene(cylindrical_scene);
+                        creator.createCylindrical(1, 1); // Crea un Sphere
 
-                                             auto layout = vsg::StandardLayout::create();
-                                            layout->glyphLayout = vsg::StandardLayout::LEFT_TO_RIGHT_LAYOUT;
-                                            layout->position = vsg::vec3(-1.0, 0.0, 2.0);
-                                            layout->horizontal = vsg::vec3(0.9, 0.0, 0.0);
-                                            layout->vertical = vsg::vec3(0.0, 0.0, 0.9);
-                                            layout->color = vsg::vec4(0.0, 1.0, 0.0, 1.0);
+                        abstract_nodes->addChild(false, cylindrical_scene);
 
-                                            auto font_filename = std::string("./fonts/times.vsgb");
-                                            auto font = vsg::read_cast<vsg::Font>(font_filename, options);
+                        /* AGREGA TODOS A ABSTRACT_SCENE */
 
-
-                                            auto text = vsg::Text::create();
-                                            text->text = vsg::stringValue::create("LEFT_TO_RIGHT_LAYOUT");
-                                            text->font = font;
-                                            text->layout = layout;
-                                            
-                                            
-                                            text->setup(0, options);
-                                            xyz_scene->addChild(true, text);
-
-
-
-                                        abstract_nodes->addChild(true, xyz_scene);
-
-
-   
-                                          /*--------------- radial SCENE -----------------*/
-
-                                        auto radial_scene = vsg::Switch::create();
-                                            creator.setScene(radial_scene);
-                                            creator.createRadial(20,20); // Crea un radial                                 
-                                        abstract_nodes->addChild(false, radial_scene);
-
-
-                                         /*--------------- radial Depth SCENE -----------------*/
-
-                                        auto radiald_scene = vsg::Switch::create();
-                                            creator.setScene(radiald_scene);
-                                            creator.createRadialDepth(20,20); // Crea un radial
-                                    
-                                        abstract_nodes->addChild(false, radiald_scene);
-
-
-
-                                        /*--------------- spherical SCENE -----------------*/
-
-                                        auto spherical_scene = vsg::Switch::create();
-                                           creator.setScene(spherical_scene);
-                                            creator.createSpherical(1,1); // Crea un Sphere
-                                     
-                                        abstract_nodes->addChild(false, spherical_scene);
-
-
-                                         /*--------------- cylindrical SCENE -----------------*/
-
-                                        auto cylindrical_scene = vsg::Switch::create();
-                                            creator.setScene(cylindrical_scene);
-                                            creator.createCylindrical(1,1); // Crea un Sphere
-
-
-                                           
-                                        
-                                        abstract_nodes->addChild(false, cylindrical_scene);
-
-
-
-
-                                        
-
-
-
-
-                            /* AGREGA TODOS A ABSTRACT_SCENE */
-
-                            abstract_scene->addChild(true, abstract_nodes);
-
-
-                           
-
-
+                        abstract_scene->addChild(true, abstract_nodes);
 
     /*----------------------------------------------------------------------
 
@@ -283,16 +297,12 @@ int main(int argc, char **argv)
 
     InputKeyboardValues keyb;
 
-
-
     // GUI,  CREA UN NODO ImGui
 
     auto params = Params::create();
     // auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options));
-    auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options, setLineWidth, &keyb, &scenecontroller));
+    auto renderImGui = vsgImGui::RenderImGui::create(window, Main_menu::create(params, options, setLineWidth, &keyb, &scenecontroller, &commandProcessor));
 
-  
-  
     /*------------------------------------------------------------------------
 
         VIEWER
@@ -312,129 +322,79 @@ int main(int argc, char **argv)
     uint32_t width = window->extent2D().width;
     uint32_t height = window->extent2D().height;
 
-
-
-
     /*--------------------------------------------------------------------------
 
 
-        CAMARAS 
+        CAMARAS
 
                 Crea las camaras y para cada una una Vista Asociada
 
     -----------------------------------------------------------------------------*/
 
-
-
-            // CAMARA GEOGRAFICA (Elipsoide)
-
-
-                /*
-                // Bounds y Parametros 
-
-                vsg::ComputeBounds computeBounds;
-                earth_scene->accept(computeBounds);
-
-                vsg::dvec3 centre = (computeBounds.bounds.min + computeBounds.bounds.max) * 0.5;
-                double radius = vsg::length(computeBounds.bounds.max - computeBounds.bounds.min) * 0.9;
-                double nearFarRatio = 0.001;
-
-                
-                vsg::ref_ptr<vsg::LookAt> lookAt;
-                vsg::ref_ptr<vsg::ProjectionMatrix> perspective;
-
-                lookAt = vsg::LookAt::create(centre + vsg::dvec3(0.0, -radius * 3.5, 0.0), centre, vsg::dvec3(0.0, 0.0, 1.0));
-
-                perspective = vsg::EllipsoidPerspective::create(lookAt, ellipsoidModel, 30.0, static_cast<double>(window->extent2D().width) / static_cast<double>(window->extent2D().height), nearFarRatio, horizonMountainHeight);
-
-                //  Crea Camara :
-
-                //auto camera_geo = vsg::Camera::create(perspective, lookAt, vsg::ViewportState::create(window->extent2D()));
-                
-                
-                */
-
-
-                auto camera_geo = createCameraForGeoScene(earth_scene, 0, 0, width, height, window, ellipsoidModel);
-
-
-                // Crea VISTA
-
-                auto earth_view = vsg::View::create(camera_geo, earth_scene);
-
-    
-
-
-            // CAMARA PARA ESCENAS ABSTRACTAS
-
-      
-               
-   
-                // Camara 
-                auto camera_abstract = createCameraForScene(abstract_scene, 0, 0, width, height);
-
-                // Vista
-                auto abstract_view = vsg::View::create(camera_abstract, abstract_scene);
+    // CAMARA GEOGRAFICA (Elipsoide)
 
    
 
+    auto camera_geo = createCameraForGeoScene(earth_scene, 0, 0, width, height, window, ellipsoidModel);
+
+    // Crea VISTA
+
+    auto earth_view = vsg::View::create(camera_geo, earth_scene);
+
+    // CAMARA PARA ESCENAS ABSTRACTAS
+
+    // Camara
+    auto camera_abstract = createCameraForScene(abstract_scene, 0, 0, width, height);
+
+    // Vista
+    auto abstract_view = vsg::View::create(camera_abstract, abstract_scene);
 
     /*-----------------------------------------------------
 
 
-        MANEJO DE EVENTOS 
+        MANEJO DE EVENTOS
 
 
     --------------------------------------------------------*/
 
-   
-   
-            // ESCAPE Y Cerrado de ventana
-            viewer->addEventHandler(vsg::CloseHandler::create(viewer));
+    // ESCAPE Y Cerrado de ventana
+    viewer->addEventHandler(vsg::CloseHandler::create(viewer));
 
-            //  Registramos como Listener al GUI (El primero en registrarse recibe primero los eventos)
-            viewer->addEventHandler(vsgImGui::SendEventsToImGui::create());
+    //  Registramos como Listener al GUI (El primero en registrarse recibe primero los eventos)
+    viewer->addEventHandler(vsgImGui::SendEventsToImGui::create());
 
-   
+    // Eventos de Navegacion en la geografia :
 
-            // Eventos de Navegacion en la geografia :
+    // 25.686613 -100.316116
 
-             //25.686613 -100.316116
+    auto trackball = vsg::Trackball::create(camera_geo, ellipsoidModel);
+    trackball->addKeyViewpoint(vsg::KeySymbol('1'), 25.686613, -100.316116, 2000.0, 2.0);                  // Monterrey
+    trackball->addKeyViewpoint(vsg::KeySymbol('2'), 55.948642740309324, -3.199226855522667, 2000.0, 2.0);  // Edinburgh Castle
+    trackball->addKeyViewpoint(vsg::KeySymbol('3'), 48.858264952330764, 2.2945039609604665, 2000.0, 2.0);  // Eiffel Town, Paris
+    trackball->addKeyViewpoint(vsg::KeySymbol('4'), 52.5162603714634, 13.377684902745642, 2000.0, 2.0);    // Brandenburg Gate, Berlin
+    trackball->addKeyViewpoint(vsg::KeySymbol('5'), 30.047448591298807, 31.236319571791213, 10000.0, 2.0); // Cairo
+    trackball->addKeyViewpoint(vsg::KeySymbol('6'), 35.653099536061156, 139.74704060056993, 10000.0, 2.0); // Tokyo
+    trackball->addKeyViewpoint(vsg::KeySymbol('7'), 37.38701052699002, -122.08555895549424, 10000.0, 2.0); // Mountain View, California
+    trackball->addKeyViewpoint(vsg::KeySymbol('8'), 40.689618207006355, -74.04465595488215, 10000.0, 2.0); // Empire State Building
+    trackball->addKeyViewpoint(vsg::KeySymbol('9'), 25.997055873649554, -97.15543476551771, 1000.0, 2.0);  // Boca Chica, Taxas
 
-            auto trackball = vsg::Trackball::create(camera_geo, ellipsoidModel);
-            trackball->addKeyViewpoint(vsg::KeySymbol('1'), 25.686613, -100.316116, 2000.0, 2.0); // Monterrey
-            trackball->addKeyViewpoint(vsg::KeySymbol('2'), 55.948642740309324, -3.199226855522667, 2000.0, 2.0);  // Edinburgh Castle
-            trackball->addKeyViewpoint(vsg::KeySymbol('3'), 48.858264952330764, 2.2945039609604665, 2000.0, 2.0);  // Eiffel Town, Paris
-            trackball->addKeyViewpoint(vsg::KeySymbol('4'), 52.5162603714634, 13.377684902745642, 2000.0, 2.0);    // Brandenburg Gate, Berlin
-            trackball->addKeyViewpoint(vsg::KeySymbol('5'), 30.047448591298807, 31.236319571791213, 10000.0, 2.0); // Cairo
-            trackball->addKeyViewpoint(vsg::KeySymbol('6'), 35.653099536061156, 139.74704060056993, 10000.0, 2.0); // Tokyo
-            trackball->addKeyViewpoint(vsg::KeySymbol('7'), 37.38701052699002, -122.08555895549424, 10000.0, 2.0); // Mountain View, California
-            trackball->addKeyViewpoint(vsg::KeySymbol('8'), 40.689618207006355, -74.04465595488215, 10000.0, 2.0); // Empire State Building
-            trackball->addKeyViewpoint(vsg::KeySymbol('9'), 25.997055873649554, -97.15543476551771, 1000.0, 2.0);  // Boca Chica, Taxas
+    // Trackball para escenas abstractas
+    auto tb1 = vsg::Trackball::create(camera_abstract);
 
-          
-            // Trackball para escenas abstractas
-            auto tb1 = vsg::Trackball::create(camera_abstract);
+    // Crea un MOUSEHANDLER para manejar los 2 trackballs. Uno para la escena geografica y otro para la abstracta.
+    // La razon de ello es que la escena geografica usa un modelo Elipsoide.
 
+    auto mouseHandler = MouseHandler::create(trackball, tb1);
 
-            // Crea un MOUSEHANDLER para manejar los 2 trackballs. Uno para la escena geografica y otro para la abstracta.
-            // La razon de ello es que la escena geografica usa un modelo Elipsoide.
+    // Solo registra el mouseHandler. Este rutea los eventos del mouse y teclado al trackball que este activo
+    viewer->addEventHandler(mouseHandler);
 
-            auto mouseHandler = MouseHandler::create(trackball, tb1);
-           
-
-            // Solo registra el mouseHandler. Este rutea los eventos del mouse y teclado al trackball que este activo
-            viewer->addEventHandler(mouseHandler);
-
-   
-   
     /*--------------------------------------------------------
 
 
         ARMADO DE RenderGraph, CommandGraph
 
     ----------------------------------------------------------*/
-
 
     // ViewSelector es un Switch que integra vistas (geografica y abstracta)
 
@@ -449,7 +409,6 @@ int main(int argc, char **argv)
     scenecontroller.setMouseHandler(mouseHandler);
 
     scenecontroller.setSwitchAbstract(abstract_nodes);
-
 
     auto renderGraph = vsg::RenderGraph::create(window);
 
@@ -471,13 +430,10 @@ int main(int argc, char **argv)
     auto clearAttachments = vsg::ClearAttachments::create(vsg::ClearAttachments::Attachments{color_attachment, depth_attachment}, vsg::ClearAttachments::Rects{rect, rect});
     */
 
-
     // renderGraph->addChild(clearAttachments);
 
     // add the second insert view that overlays ontop.
     // renderGraph->addChild(abstract_view);
-
-
 
     // option 1
     auto commandGraph = vsg::CommandGraph::create(window);
@@ -485,18 +441,12 @@ int main(int argc, char **argv)
 
     viewer->assignRecordAndSubmitTaskAndPresentation({commandGraph});
 
-
-    
     // option 2
-    //auto commandGraph = vsg::createCommandGraphForView(window, camera_abstract, abstract_scene);
-    //viewer->assignRecordAndSubmitTaskAndPresentation({commandGraph});
-
-
-
-
+    // auto commandGraph = vsg::createCommandGraphForView(window, camera_abstract, abstract_scene);
+    // viewer->assignRecordAndSubmitTaskAndPresentation({commandGraph});
 
     // add the view handler for interactively changing the views
-    //viewer->addEventHandler(ViewHandler::create(renderGraph));
+    // viewer->addEventHandler(ViewHandler::create(renderGraph));
 
     // Creamos un IntersectionHandler que va a monitorear intersecciones para picking de objetos
     // Por ahora recibe un builder para poder generar objetos dinammicos en la escena
@@ -504,7 +454,7 @@ int main(int argc, char **argv)
     intersectionHandler->state = stateInfo;
 
     // Registramos el Intersection Handler, tiene varios apply
-     viewer->addEventHandler(intersectionHandler);
+    viewer->addEventHandler(intersectionHandler);
 
     builder->assignCompileTraversal(vsg::CompileTraversal::create(*viewer));
 
@@ -518,12 +468,29 @@ int main(int argc, char **argv)
 
     ---------------------------------------------------------------------*/
 
+    double frameCount = 0.0;
+    double radius = 1000000;
+
     while (viewer->advanceToNextFrame() && (numFrames < 0 || (numFrames--) > 0))
     {
-        // pass any events into EventHandlers assigned to the Viewer
+         ++frameCount;
+
         viewer->handleEvents();
 
         viewer->update();
+
+
+         for(auto& vertices : verticesList)
+                {
+                    for(auto& v : *vertices)
+                    {
+                        v.z += (sin(vsg::PI * frameCount / 180.0) * radius * 0.001);
+                    }
+                    vertices->dirty();
+                }
+
+
+
 
         viewer->recordAndSubmit();
 

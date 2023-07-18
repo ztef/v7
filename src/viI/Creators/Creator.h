@@ -26,10 +26,12 @@ class Creator {
 
         vsg::ref_ptr<vsg::Switch> scene;
         vsg::ref_ptr<vsg::Options> local_options;
+        vsg::ref_ptr<vsg::Font> font;
 
         void init();
         void setScene(vsg::ref_ptr<vsg::Switch> in_scene);
-        void setOptions(vsg::ref_ptr<vsg::Options> in_options);
+        void resetPositions();
+        void setOptions(vsg::ref_ptr<vsg::Options> in_options, vsg::ref_ptr<vsg::Font> in_font);
         
         void createFromFile(std::string filename);
         void createPrimitive(std::string primitive);
