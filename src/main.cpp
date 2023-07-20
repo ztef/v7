@@ -228,7 +228,7 @@ int main(int argc, char **argv)
                         auto a =  ActorCreator::create(builder,stateInfo, 0,0);
                         
                         
-                         // visit the scene graph to collect all the vertex arrays;
+                         // Hace que este actor sea manipulable (DYNAMIC DATA)
                         size_t numVertices = 0;
                         auto verticesList = vsg::visit<FindVertexData>(a).getVerticesList();
                        
@@ -255,9 +255,28 @@ int main(int argc, char **argv)
 
                         auto radial_scene = vsg::Switch::create();
                         creator.setScene(radial_scene);
-                        // creator.createRadial(20,20); // Crea un radial
+                        creator.createRadial(3,10); // Crea un radial
+
+                        // RawTestGeom raw(options);
+
+                       
+                                     // Usa setLineWidth para poder manejar el ancho desde un slider del GUI
+                                   
+                                  // raw.setLineW(setLineWidth);   
+
+                        //creator.createRaw(raw);
+                         
+
+
+
 
                         abstract_nodes->addChild(false, radial_scene);
+
+
+                        
+
+
+
 
     /*--------------- radial Depth SCENE -----------------*/
 

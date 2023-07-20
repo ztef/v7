@@ -15,11 +15,14 @@ public:
          // set up pass of material
 
 
-                       vsg::ref_ptr<vsg::ShaderSet> shaderSet;
+                        vsg::ref_ptr<vsg::ShaderSet> shaderSet;
                         shaderSet = vsg::createPhongShaderSet(options);
 
                         // enable wireframe mode to visualize line width
                         auto rasterizationState = vsg::RasterizationState::create();
+
+                        rasterizationState->cullMode = VK_CULL_MODE_NONE;
+                        
                         rasterizationState->polygonMode = VK_POLYGON_MODE_LINE;
                         shaderSet->defaultGraphicsPipelineStates.push_back(rasterizationState);
 
@@ -31,19 +34,57 @@ public:
                             setShaderSet(shaderSet);
                         }
 
+                                
+                              auto vertices = vsg::vec3Array::create(
+                                    {{-10000000.5f, 0.0f, 0.0f},
+                                    {10000000.5f, 0.0f, 0.0f},
+                                    {0.0f, 0.0f, 0.0f}});
+
+
+                                setVertex(vertices);
+
+                                auto normals = vsg::vec3Array::create(
+                                    {{0.0f, 0.0f, 1.0f},
+                                    {0.0f, 0.0f, 1.0f},
+                                    {0.0f, 0.0f, 1.0f}});
+
+
+                                setNormals(normals);
+
+                                auto texcoords = vsg::vec2Array::create(
+                                    {{-0.5f, 0.0f},
+                                    {0.5f, 0.0f},
+                                    {0.0f, 0.0f}});
+
+
+                                setTexCoords(texcoords);
+
+
+                                auto colors = vsg::vec4Value::create(vsg::vec4{1.0f, 0.0f, 0.0f, 1.0f});
+
+
+                                setColors(colors);
+
+
+                                auto indices = vsg::ushortArray::create(
+                                    {0, 1, 2,
+                                    0});
+
+
+                                setIndices(indices);
+       
+
+   }
 
 
 
 
 
-                                auto mat = vsg::PhongMaterialValue::create();
-                                mat->value().diffuse.set(1.0f, 1.0f, 1.0f, 1.0f);
-                                mat->value().specular.set(1.0f, 0.0f, 0.0f, 1.0f); // red specular highlight
 
-                                setMaterial(mat);
+};
 
-
-                                // set up vertex and index arrays
+/*
+ // set up vertex and index arrays
                                 auto vertices = vsg::vec3Array::create(
                                     {{-0.5f, -0.5f, 0.0f},
                                     {0.5f, -0.5f, 0.0f},
@@ -102,11 +143,47 @@ public:
 
 
 
-   }
+                                auto vertices = vsg::vec3Array::create(
+                                    {{-0.5f, 0.0f, 0.0f},
+                                    {0.5f, 0.0f, 0.0f},
+                                    {0.0f, 0.0f, 0.0f}});
+
+
+                                setVertex(vertices);
+
+                                auto normals = vsg::vec3Array::create(
+                                    {{0.0f, 0.0f, 1.0f},
+                                    {0.0f, 0.0f, 1.0f},
+                                    {0.0f, 0.0f, 1.0f}});
+
+
+                                setNormals(normals);
+
+                                auto texcoords = vsg::vec2Array::create(
+                                    {{-0.5f, 0.0f},
+                                    {0.5f, 0.0f},
+                                    {0.0f, 0.0f}});
+
+
+                                setTexCoords(texcoords);
+
+
+                                auto colors = vsg::vec4Value::create(vsg::vec4{1.0f, 0.0f, 0.0f, 1.0f});
+
+
+                                setColors(colors);
+
+
+                                auto indices = vsg::ushortArray::create(
+                                    {0, 1, 2,
+                                    0});
+
+
+                                setIndices(indices);
+       
 
 
 
 
 
-
-};
+*/

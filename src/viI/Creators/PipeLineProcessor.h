@@ -33,8 +33,9 @@ public:
         r.drawCommands->addChild(vsg::BindIndexBuffer::create(r.indices));
         r.drawCommands->addChild(vsg::DrawIndexed::create(12, 1, 0, 0, 0));
 
-
+        if(r.setLineWidth){
         r.drawCommands->addChild(r.setLineWidth);
+        }
 
 
         // register the ViewDescriptorSetLayout.
