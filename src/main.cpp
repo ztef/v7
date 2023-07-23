@@ -20,58 +20,6 @@
 
 
 
-class FindVertexData : public vsg::Visitor
-{
-public:
-
-    void apply(vsg::Object& object)
-    {
-        object.traverse(*this);
-    }
-
-    void apply(vsg::Geometry& geometry)
-    {
-        if (geometry.arrays.empty()) return;
-        geometry.arrays[0]->data->accept(*this);
-    }
-
-    void apply(vsg::VertexIndexDraw& vid)
-    {
-        if (vid.arrays.empty()) return;
-        vid.arrays[0]->data->accept(*this);
-    }
-
-    void apply(vsg::BindVertexBuffers& bvd)
-    {
-        if (bvd.arrays.empty()) return;
-        bvd.arrays[0]->data->accept(*this);
-    }
-
-    void apply(vsg::vec3Array& vertices)
-    {
-        if (verticesSet.count(&vertices) == 0)
-        {
-            verticesSet.insert(&vertices);
-        }
-    }
-
-
-    std::vector<vsg::ref_ptr<vsg::vec3Array>> getVerticesList()
-    {
-        std::vector<vsg::ref_ptr<vsg::vec3Array>> verticesList(verticesSet.size());
-        auto vertices_itr = verticesList.begin();
-        for(auto& vertices : verticesSet)
-        {
-            (*vertices_itr++) = const_cast<vsg::vec3Array*>(vertices);
-        }
-
-        return verticesList;
-    }
-
-    std::set<vsg::vec3Array*> verticesSet;
-};
-
-
 
 
 
@@ -149,6 +97,14 @@ int main(int argc, char **argv)
     CommandProcessor commandProcessor;
 
 
+
+    /*
+        MOTOR DE TRANSFORMACIONES
+    */
+
+    TransformEngine transformEngine;
+
+
     /*-------------------------------------------------
 
 
@@ -185,20 +141,20 @@ int main(int argc, char **argv)
 
     ---------------------------------------------------*/
 
-    // ESCENA : earth_scene
-    auto settings = vsg::TileDatabaseSettings::create();
-    auto earth_scene = EarthSceneCreator::create(options, settings);
+                // ESCENA : earth_scene
+                auto settings = vsg::TileDatabaseSettings::create();
+                auto earth_scene = EarthSceneCreator::create(options, settings);
 
-    auto ellipsoidModel = settings->ellipsoidModel;
+                auto ellipsoidModel = settings->ellipsoidModel;
 
-    auto barra = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 25.686613, -100.316116);
-    earth_scene->addChild(barra);
+                auto barra = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 25.686613, -100.316116);
+                earth_scene->addChild(barra);
 
-    auto barra1 = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 26.686613, -100.316116);
-    earth_scene->addChild(barra1);
+                auto barra1 = GeomActorCreator::create(ellipsoidModel, builder, stateInfo, 26.686613, -100.316116);
+                earth_scene->addChild(barra1);
 
-    auto luz = LightCreator::create();
-    earth_scene->addChild(luz);
+                auto luz = LightCreator::create();
+                earth_scene->addChild(luz);
 
     /*-------------------------------------------------
 
@@ -225,23 +181,10 @@ int main(int argc, char **argv)
                         creator.setScene(xyz_scene);
                         creator.createPlane(30, 30); // Crea un plano
 
-                        auto a =  ActorCreator::create(builder,stateInfo, 0,0);
+                        auto a =  ActorCreator::create(builder,stateInfo, 0,0,"DYNAMIC");
                         
                         
-                         // Hace que este actor sea manipulable (DYNAMIC DATA)
-                        size_t numVertices = 0;
-                        auto verticesList = vsg::visit<FindVertexData>(a).getVerticesList();
-                       
-                            for(auto& vertices : verticesList)
-                            {
-                                vertices->properties.dataVariance = vsg::DYNAMIC_DATA;
-                                numVertices += vertices->size();
-                            }
-                         
-                        
-                        
-                        
-                        xyz_scene->addChild(true,a);
+                        xyz_scene->addChild(true,a->node);
 
 
 
@@ -499,14 +442,7 @@ int main(int argc, char **argv)
         viewer->update();
 
 
-         for(auto& vertices : verticesList)
-                {
-                    for(auto& v : *vertices)
-                    {
-                        v.z += (sin(vsg::PI * frameCount / 180.0) * radius * 0.001);
-                    }
-                    vertices->dirty();
-                }
+        transformEngine.transforma(a, frameCount, radius);
 
 
 

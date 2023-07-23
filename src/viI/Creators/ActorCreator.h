@@ -1,13 +1,15 @@
 #include <vsg/all.h>
+#include "../Actors/Actor.h"
+#include "../Visitors/FindVertexData.h"
 
-
+#include <stdio.h>
 
 class ActorCreator {
 
 public:
 
 
-static vsg::ref_ptr<vsg::Node> create(vsg::ref_ptr<vsg::Builder> builder, vsg::StateInfo stateInfo, float x, float y ){
+static vsg::ref_ptr<Actor> create(vsg::ref_ptr<vsg::Builder> builder, vsg::StateInfo stateInfo, float x, float y , std::string mode){
 
             vsg::GeometryInfo geomInfo;
 
@@ -17,14 +19,42 @@ static vsg::ref_ptr<vsg::Node> create(vsg::ref_ptr<vsg::Builder> builder, vsg::S
 
              
 
-            auto actor = builder->createCylinder(geomInfo, stateInfo);
-                 actor->setValue("name", "CAJA");
+            auto geom = builder->createCylinder(geomInfo, stateInfo);
+                 geom->setValue("name", "CAJA");
+
+
+           auto actor = new Actor();
+           actor->node = geom;
+
+          if(mode == "DYNAMIC"){
+
+
+                         // Hace que este actor sea manipulable (DYNAMIC DATA)
+                        size_t numVertices = 0;
+                        auto verticesList = vsg::visit<FindVertexData>(geom).getVerticesList();
+                       
+                            for(auto& vertices : verticesList)
+                            {
+                                vertices->properties.dataVariance = vsg::DYNAMIC_DATA;
+                                numVertices += vertices->size();
+                            }
 
 
 
-            return actor;
+                          actor->verticesList = verticesList;
+                          actor->isDynamic = true;
+          }
+
+
+         
+
+          return vsg::ref_ptr<Actor>(actor);
 
 
 }
 
 };
+
+
+
+   

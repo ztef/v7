@@ -8,11 +8,11 @@
 #include <vsgImGui/imgui.h>
 #include <vsgImGui/implot.h>
 
-#include "../Interaction/VIConsole.h"
+#include "../Interactors/VIConsole.h"
 
-#include "../Interaction/Handlers/InputKeyboardValues.h"
-#include "../Interaction/Handlers/SceneController.h"
-#include "../Command/CommandProcessor.h"
+#include "../Interactors/Handlers/InputKeyboardValues.h"
+#include "../Interactors/Handlers/SceneController.h"
+#include "../Commands/CommandProcessor.h"
 
 #include <vsg/all.h>
 
@@ -64,7 +64,7 @@ public:
        
        logo = vsgImGui::Texture::create_if(texData, texData);
 
-       auto texData1 = vsg::read_cast<vsg::Data>("./textures/ojo.jpeg", options);
+       auto texData1 = vsg::read_cast<vsg::Data>("./textures/ojo.jpg", options);
        about = vsgImGui::Texture::create_if(texData1, texData1); 
       
     }

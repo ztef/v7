@@ -10,9 +10,9 @@
 
 
 
-#include "../Interaction/Handlers/InputKeyboardValues.h"
-#include "../Interaction/Handlers/SceneController.h"
-#include "../Command/CommandProcessor.h"
+#include "../Interactors/Handlers/InputKeyboardValues.h"
+#include "../Interactors/Handlers/SceneController.h"
+#include "../Commands/CommandProcessor.h"
 
 #include <vsg/all.h>
 
