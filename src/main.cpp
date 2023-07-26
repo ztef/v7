@@ -77,6 +77,26 @@ int main(int argc, char **argv)
     // Usa setLineWidth para poder manejar el ancho desde un slider del GUI
     auto setLineWidth = vsg::SetLineWidth::create(1.0f);
 
+
+      auto builder = vsg::Builder::create();
+     vsg::StateInfo stateInfo;
+
+     stateInfo.lighting = true;
+
+
+
+    /*
+    
+        0: Registry 
+
+    */
+
+   Registry registry;
+   registry.builder = builder;
+   
+
+
+
     /*---------------------------------
 
         0 : CONTROLADOR DE LA ESCENA
@@ -87,6 +107,8 @@ int main(int argc, char **argv)
 
     SceneController scenecontroller;
 
+        registry.scenecontroller = &scenecontroller;            // Registra
+
 
  /*---------------------------------
 
@@ -95,6 +117,8 @@ int main(int argc, char **argv)
     -----------------------------------*/
 
     CommandProcessor commandProcessor;
+
+    commandProcessor.registry = &registry;
 
 
 
@@ -115,10 +139,7 @@ int main(int argc, char **argv)
 
     // 1.1  : Builder generico para construir geometrias primitivas en demanda :
 
-    auto builder = vsg::Builder::create();
-    vsg::StateInfo stateInfo;
-
-    stateInfo.lighting = true;
+  
     // 1.2 : CREA OBJETO CREATOR para crear objetos complejos  e insertarlos a la escena.
 
     Creator creator;
@@ -156,6 +177,9 @@ int main(int argc, char **argv)
                 auto luz = LightCreator::create();
                 earth_scene->addChild(luz);
 
+
+                registry.earth_scene = earth_scene;         // Registra
+
     /*-------------------------------------------------
 
 
@@ -175,6 +199,9 @@ int main(int argc, char **argv)
 
                 auto abstract_nodes = vsg::Switch::create();
 
+
+                registry.abstract_nodes = abstract_nodes;       // Registra
+
     /*--------------- XYZ SCENE -----------------*/
 
                         auto xyz_scene = vsg::Switch::create();
@@ -185,14 +212,13 @@ int main(int argc, char **argv)
                         
                         
                         xyz_scene->addChild(true,a->node);
+                        
+                        registry.xyz_scene = xyz_scene;         // Registra
 
-
-
-
-
-                 
-
+                        
                         abstract_nodes->addChild(true, xyz_scene);
+
+
 
     /*--------------- radial SCENE -----------------*/
 
@@ -210,7 +236,11 @@ int main(int argc, char **argv)
                         //creator.createRaw(raw);
                          
 
+                        // CREA UN ACTOR B
+                        //auto bb =  ActorCreator::create(builder,stateInfo, 10 ,0,"STATIC");
+                        //radial_scene->addChild(true,bb->node);
 
+                        registry.radial_scene = radial_scene;       // Registra
 
 
                         abstract_nodes->addChild(false, radial_scene);
@@ -441,9 +471,9 @@ int main(int argc, char **argv)
 
         viewer->update();
 
-
-        transformEngine.transforma(a, frameCount, radius);
-
+        if(a->isDynamic){
+            transformEngine.transforma(a, frameCount, radius);
+        }
 
 
 

@@ -19,7 +19,7 @@ class TransformEngine {
 
 
 
-       void transforma(vsg::ref_ptr<Actor> a, double frameCount, double radius){
+       void transforma(Actor* a, double frameCount, double radius){
                  for(auto& vertices : a->verticesList)
                 {
                     for(auto& v : *vertices)

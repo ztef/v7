@@ -1,3 +1,4 @@
+#pragma once
 #include <vsg/all.h>
 #include "../Actors/Actor.h"
 #include "../Visitors/FindVertexData.h"
@@ -9,18 +10,26 @@ class ActorCreator {
 public:
 
 
-static vsg::ref_ptr<Actor> create(vsg::ref_ptr<vsg::Builder> builder, vsg::StateInfo stateInfo, float x, float y , std::string mode){
+static Actor* create(vsg::ref_ptr<vsg::Builder> builder, vsg::StateInfo in_stateInfo, float x, float y , std::string mode){
 
             vsg::GeometryInfo geomInfo;
+
+             vsg::StateInfo stateInfo;
+
+               stateInfo.lighting = true;
 
             geomInfo.dx.set(20000.0f, 0.0f, 0.0f);
             geomInfo.dy.set(0.0f, 20000.0f, 0.0f);
             geomInfo.dz.set(0.0f, 0.0f, 250000.0f);
 
+
+            geomInfo.position.x = x;
+            geomInfo.position.y = y;
+
              
 
             auto geom = builder->createCylinder(geomInfo, stateInfo);
-                 geom->setValue("name", "CAJA");
+                 //geom->setValue("name", "CAJA");
 
 
            auto actor = new Actor();
@@ -43,12 +52,16 @@ static vsg::ref_ptr<Actor> create(vsg::ref_ptr<vsg::Builder> builder, vsg::State
 
                           actor->verticesList = verticesList;
                           actor->isDynamic = true;
+
+          } else {
+                actor->isDynamic = false;
+
           }
 
 
          
 
-          return vsg::ref_ptr<Actor>(actor);
+          return (actor);
 
 
 }

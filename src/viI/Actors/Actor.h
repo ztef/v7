@@ -4,12 +4,14 @@
 
 
 
-class Actor : public vsg::Object {
+class Actor  {
 
 public:
 
+    Actor(){};
+
     vsg::ref_ptr<vsg::Node> node;
-    bool isDynamic;
+    bool isDynamic = false;
     std::vector<vsg::ref_ptr<vsg::vec3Array>>  verticesList;
 
 

@@ -16,3 +16,4 @@
 #include "Creators/RawTestGeom.h"
 #include "Commands/CommandProcessor.h"
 #include "Transformers/TransformEngine.h"
+#include "Registry/Registry.h"
