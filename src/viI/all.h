@@ -17,3 +17,4 @@
 #include "Commands/CommandProcessor.h"
 #include "Transformers/TransformEngine.h"
 #include "Registry/Registry.h"
+#include "DataStore/DataStore.h"

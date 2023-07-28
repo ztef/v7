@@ -94,6 +94,19 @@ int main(int argc, char **argv)
    Registry registry;
    registry.builder = builder;
    
+   registry.font = font;
+   registry.in_options = options;
+
+
+
+    /*------------------------
+        DATA STORE
+    --------------------------*/
+
+    DataStore datastore;
+
+
+    registry.datastore = &datastore;
 
 
 
@@ -118,7 +131,7 @@ int main(int argc, char **argv)
 
     CommandProcessor commandProcessor;
 
-    commandProcessor.registry = &registry;
+    commandProcessor.setRegistry(&registry);
 
 
 
@@ -143,6 +156,8 @@ int main(int argc, char **argv)
     // 1.2 : CREA OBJETO CREATOR para crear objetos complejos  e insertarlos a la escena.
 
     Creator creator;
+
+    registry.creator = &creator;
 
     /*----------------------------------------------------
 
@@ -246,10 +261,6 @@ int main(int argc, char **argv)
                         abstract_nodes->addChild(false, radial_scene);
 
 
-                        
-
-
-
 
     /*--------------- radial Depth SCENE -----------------*/
 
@@ -269,15 +280,20 @@ int main(int argc, char **argv)
 
     /*--------------- cylindrical SCENE -----------------*/
 
-                        auto cylindrical_scene = vsg::Switch::create();
-                        creator.setScene(cylindrical_scene);
-                        creator.createCylindrical(1, 1); // Crea un Sphere
+                       auto cylindrical_scene = vsg::Switch::create();
+                       // creator.setScene(cylindrical_scene);
+                       // creator.createCylindrical(1, 1); // Crea un Cilindro
 
-                        abstract_nodes->addChild(false, cylindrical_scene);
+                       registry.cylindrical_scene = cylindrical_scene; 
 
-                        /* AGREGA TODOS A ABSTRACT_SCENE */
+                       abstract_nodes->addChild(false, cylindrical_scene);
 
-                        abstract_scene->addChild(true, abstract_nodes);
+
+
+
+    /* AGREGA TODOS A ABSTRACT_SCENE */
+
+    abstract_scene->addChild(true, abstract_nodes);
 
     /*----------------------------------------------------------------------
 
@@ -451,6 +467,10 @@ int main(int argc, char **argv)
     builder->assignCompileTraversal(vsg::CompileTraversal::create(*viewer));
 
     viewer->compile();
+
+
+    registry.viewer = viewer;
+
 
     /*-------------------------------------------------------------------
 

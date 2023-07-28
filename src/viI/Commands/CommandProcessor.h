@@ -15,11 +15,16 @@ class CommandProcessor {
 public:
 
 
-Registry * registry;
  std::map<std::string, std::string> variables;
  
  Parser parser;
  Executor executor;
+
+
+
+void setRegistry(Registry * in_registry){
+  executor.registry = in_registry;
+}
 
 
 
@@ -49,7 +54,7 @@ std::string parse(std::string input){
 }
 
 
-
+/*
 
 std::string parseold(std::string input){
         std::cout << input << std::endl; 
@@ -80,6 +85,7 @@ std::string parseold(std::string input){
 
         return "ok";
 }
+*/
 
 
 

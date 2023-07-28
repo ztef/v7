@@ -14,7 +14,7 @@ std::vector<std::string> Parser::tokenizeLine(const std::string& line) {
     // Regular expression to match the SET command format
     std::regex setRegex(R"(^\s*SET\s+(\w+)\s*=\s*(.*?)(?:\s*;\s*)?$)");
     // Regular expression to match custom command format (e.g., A B;)
-    std::regex customCommandRegex(R"(^\w+(?:\s+\w+)*\s*;\s*$)");
+    std::regex customCommandRegex(R"(^\w+(?:\s+[\w.]+)*\s*(?:;\s*)?$)");
 
     std::smatch match;
     if (std::regex_match(line, match, setRegex)) {
@@ -38,6 +38,7 @@ std::vector<std::string> Parser::tokenizeLine(const std::string& line) {
         }
     } else {
         // If no match, treat the entire line as a single token
+        std::cout << "No reconocido" << std::endl;
         tokens.push_back(line);
     }
 

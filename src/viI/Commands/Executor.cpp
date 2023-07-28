@@ -1,4 +1,7 @@
 #include "Executor.h"
+#include "../Creators/SceneCreator.h"
+#include "../Creators/ActorCreator.h"
+#include "../Loaders/Loader.h"
 #include <iostream>
 #include <regex>
 
@@ -21,11 +24,9 @@ std::string Executor::executeCommand(const std::vector<std::string>& tokens, std
         result = executeSetCommand(tokens, variables);
     } else if (command == "SHOW") {
          result = executeShowCommand(variables);
-    } else if (std::regex_match(command, commandRegex)) {
-         result =  executeCustomCommand(tokens);
-    } else {
-        result =  "Unknown command: ";
-    }
+    } else  {
+         result =  executeCustomCommand(command, tokens);
+    } 
     return result;
 }
 
@@ -57,7 +58,7 @@ std::string Executor::executeShowCommand(const std::map<std::string, std::string
      return "SHOW ok";
 }
 
-std::string Executor::executeCustomCommand(const std::vector<std::string>& tokens) {
+std::string Executor::executeCustomCommand(std::string command, const std::vector<std::string>& tokens) {
     std::cout << "Executing custom command: " << tokens[0];
     if (tokens.size() > 1) {
         std::cout << " with arguments:";
@@ -65,5 +66,47 @@ std::string Executor::executeCustomCommand(const std::vector<std::string>& token
             std::cout << " " << tokens[i];
         }
     }
+
+    if(tokens[0] == "CREATE"){
+        std::cout << "AQUI SE CREA UN ACTOR" << std::endl;
+
+        
+
+                // CREA UN ACTOR B
+                        auto bb =  ActorCreator::create(registry->builder,registry->stateInfo, 10 ,0,"STATIC");
+                        registry->radial_scene->addChild(true,bb->node);
+
+    }
+
+
+     if(tokens[0] == "CREATES"){
+        std::cout << "AQUI SE CREA UNA ESCENA" << std::endl;
+
+        
+                 // CREA UNA ESCENA
+                        auto ss =  SceneCreator::createPlane(registry->builder,registry->stateInfo, 10 ,10,"STATIC", registry->font, registry->in_options);
+                        //registry->cylindrical_scene->addChild(true,ss->node);
+                       auto result = registry->viewer->compileManager->compile(ss->node);
+                       if(result){
+                            std::cout << "COMPILADO OK" << std::endl;
+                              registry->cylindrical_scene->addChild(true,ss->node);
+                       } else {
+                            std::cout << "FALLA EN COMPILADO " << std::endl;
+                        }
+    }
+
+    if(tokens[0] == "LOAD"){
+        Loader::loadJson(registry->datastore);
+
+    }
+
+    if(tokens[0] == "SHOWD"){
+        registry->datastore->showData();
+
+    }
+
+
+
+
     return "CUSTOM ok";
 }
